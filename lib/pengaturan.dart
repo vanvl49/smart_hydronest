@@ -486,7 +486,7 @@ void EditBatasCahaya(BuildContext context) {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'Atur Batas Suhu',
+                'Atur Batas Intensitas Cahaya',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
