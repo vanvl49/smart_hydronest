@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'pengaturan.dart';
 import 'profil.dart';
+import 'login.dart';
 
 class EditProfil extends StatefulWidget {
   const EditProfil({super.key});
@@ -301,8 +302,16 @@ class _EditProfilState extends State<EditProfil> {
                                       ),
                                     ),
                                     onPressed: () {
-                                      // Add logout logic here
-                                      Navigator.of(context).pop();
+                                      Navigator.of(
+                                        context,
+                                      ).pop(); // Close the dialog
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => const LoginScreen(),
+                                        ),
+                                      );
                                     },
                                   ),
                                   OutlinedButton(

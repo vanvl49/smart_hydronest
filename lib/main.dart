@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_hydronest/splash_screen.dart';
 import 'home_screen.dart';
-import 'pengaturan.dart';
-import 'profil.dart';
+import 'login.dart';
 
 void main() {
   runApp(const MainApp());
@@ -17,7 +16,7 @@ class MainApp extends StatelessWidget {
       title: 'Smart HydroNest',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.green, fontFamily: 'Roboto'),
-      home: HomeScreen(),
+      home: LoginScreen(),
       // initialRoute: '/',
       // routes: {
       //   '/': (context) => HomeScreen(),
