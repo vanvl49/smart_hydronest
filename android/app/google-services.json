@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "323425329851",
+    "project_id": "smart-hydronest",
+    "storage_bucket": "smart-hydronest.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:323425329851:android:04a9aed2e66dee65d93f9e",
+        "android_client_info": {
+          "package_name": "com.example.smart_hydronest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqQgDTcWX_zQOEyA1Xlg3puKo-tzSwqqk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
