@@ -29,10 +29,21 @@ class _PengaturanState extends State<Pengaturan> {
   }
 
   Future<void> fetchBatas() async {
-    batasSuhu = await _batasSuhuService.getBatasSuhu();
-    batasCahaya = await _batasIntensitasCahayaService.getBatasCahaya();
-    print("Cahaya min: ${batasCahaya?.cahaya_min}");
-    setState(() {});
+    try {
+      batasSuhu = await _batasSuhuService.getBatasSuhu();
+      batasCahaya = await _batasIntensitasCahayaService.getBatasCahaya();
+      print("Cahaya min: ${batasCahaya?.cahaya_min}");
+      setState(() {});
+    } catch (e) {
+      print('Error fetching data: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error fetching data: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   final _formKey = GlobalKey<FormState>();
@@ -50,6 +61,15 @@ class _PengaturanState extends State<Pengaturan> {
       });
     } catch (e) {
       print('Error updating batas suhu: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Gagal mengubah batas suhu. Silakan coba lagi. Error $e',
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
 
@@ -66,7 +86,16 @@ class _PengaturanState extends State<Pengaturan> {
         fetchBatas();
       });
     } catch (e) {
-      print('Error updating batas suhu: $e');
+      print('Error updating batas cahaya: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Gagal mengubah batas intensitas cahaya. Silakan coba lagi. Error $e',
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
 
@@ -383,6 +412,10 @@ class _PengaturanState extends State<Pengaturan> {
                       if (double.tryParse(value) == null) {
                         return 'Data Invalid';
                       }
+                      if (double.parse(value) > 100 ||
+                          double.parse(value) < 0) {
+                        return 'Data Invalid';
+                      }
                       return null;
                     },
                   ),
@@ -409,6 +442,10 @@ class _PengaturanState extends State<Pengaturan> {
                         return 'Data tidak boleh kosong';
                       }
                       if (double.tryParse(value) == null) {
+                        return 'Data Invalid';
+                      }
+                      if (double.parse(value) > 100 ||
+                          double.parse(value) < 0) {
                         return 'Data Invalid';
                       }
                       if (_minController.text.isNotEmpty &&
@@ -553,6 +590,10 @@ class _PengaturanState extends State<Pengaturan> {
                       if (double.tryParse(value) == null) {
                         return 'Data Invalid';
                       }
+                      if (double.parse(value) > 1000 ||
+                          double.parse(value) < 0) {
+                        return 'Data Invalid';
+                      }
                       return null;
                     },
                   ),
@@ -579,6 +620,10 @@ class _PengaturanState extends State<Pengaturan> {
                         return 'Data tidak boleh kosong';
                       }
                       if (double.tryParse(value) == null) {
+                        return 'Data Invalid';
+                      }
+                      if (double.parse(value) > 1000 ||
+                          double.parse(value) < 0) {
                         return 'Data Invalid';
                       }
                       if (_minController.text.isNotEmpty &&

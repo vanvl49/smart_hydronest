@@ -1,112 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:smart_hydronest/widgets/bottomnavbar.dart';
 import 'package:smart_hydronest/widgets/popUp.dart';
-import 'package:smart_hydronest/models/intensitasCahaya_model.dart';
-import 'package:smart_hydronest/models/batasIntensitasCahaya_model.dart';
-import 'package:smart_hydronest/models/suhu_model.dart';
-import 'package:smart_hydronest/models/batasSuhu_model.dart';
-import 'package:smart_hydronest/models/pendingin_model.dart';
-import 'package:smart_hydronest/models/penutup_model.dart';
-import 'package:smart_hydronest/services/suhu_service.dart';
-import 'package:smart_hydronest/services/intensitasCahaya_service.dart';
-import 'package:smart_hydronest/services/batasIntensitasCahaya_service.dart';
-import 'package:smart_hydronest/services/batasSuhu_service.dart';
-import 'package:smart_hydronest/services/pendingin_service.dart';
-import 'package:smart_hydronest/services/penutup_service.dart';
+import 'package:smart_hydronest/provider.dart';
+import 'package:provider/provider.dart';
+import 'package:smart_hydronest/services/notifikasi_service.dart';
 
 class HomeScreen extends StatefulWidget {
-  final String? username;
-  const HomeScreen({Key? key, this.username}) : super(key: key);
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool coolerStatus = false;
-  bool coverStatus = true;
-  final SuhuService _suhuService = SuhuService();
-  final IntensitasCahayaService _intensitasCahayaService =
-      IntensitasCahayaService();
-  SuhuModel? _currentSuhu;
-  IntensitasCahayaModel? _currentIntensitasCahaya;
-  final PendinginService _pendinginService = PendinginService();
-  PendinginModel? _currentPendingin;
-  final PenutupService _penutupService = PenutupService();
-  PenutupModel? _currentPenutup;
-  bool _isLoading = true;
-  String _displayUsername = 'User';
-
   @override
   void initState() {
     super.initState();
-    _loadData();
-    if (widget.username != null && widget.username!.isNotEmpty) {
-      _displayUsername = widget.username!;
-    }
-  }
-
-  Future<void> _loadData() async {
-    try {
-      final suhu = await _suhuService.getSuhu();
-      final intensitasCahaya =
-          await _intensitasCahayaService.getIntensitasCahaya();
-      final pendingin = await _pendinginService.getPendingin();
-      final penutup = await _penutupService.getPenutup();
-
-      setState(() {
-        _currentSuhu = suhu;
-        _currentIntensitasCahaya = intensitasCahaya;
-        _currentPendingin = pendingin;
-        _currentPenutup = penutup;
-        coolerStatus = pendingin?.pendingin_ON ?? false;
-        coverStatus = penutup?.penutup_ON ?? false;
-        _isLoading = false;
-      });
-    } catch (e) {
-      print('Error loading data: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _updatePendinginStatus(bool value) async {
-    try {
-      if (_currentPendingin != null) {
-        _currentPendingin!.pendingin_ON = value;
-        await _pendinginService.updatePendingin(_currentPendingin!);
-        setState(() {
-          coolerStatus = value;
-        });
-      }
-    } catch (e) {
-      print('Error updating pendingin status: $e');
-      setState(() {
-        coolerStatus = !value;
-      });
-    }
-  }
-
-  Future<void> _updatePenutupStatus(bool value) async {
-    try {
-      if (_currentPenutup != null) {
-        _currentPenutup!.penutup_ON = value;
-        await _penutupService.updatePenutup(_currentPenutup!);
-        setState(() {
-          coverStatus = value;
-        });
-      }
-    } catch (e) {
-      print('Error updating penutup status: $e');
-      setState(() {
-        coverStatus = !value;
-      });
-    }
+    context.read<HydronestProvider>().loadData(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    // Watch provider for changes
+    final provider = context.watch<HydronestProvider>();
+    void handleError(dynamic error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $error'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
@@ -130,8 +56,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Selamat Datang, $_displayUsername!',
-                      style: TextStyle(
+                      'Selamat Datang, ${provider.currentUser?.username ?? 'User'}',
+                      style: const TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -201,9 +127,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                _isLoading
+                                                provider.isLoading
                                                     ? '...'
-                                                    : '${_currentSuhu?.suhu ?? '--'}°C',
+                                                    : '${provider.currentSuhu?.suhu ?? '--'}°C',
                                                 style: const TextStyle(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.bold,
@@ -237,7 +163,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 ),
                                               ),
                                               Text(
-                                                _currentPendingin
+                                                provider
+                                                            .currentPendingin
                                                             ?.pendingin_ON ==
                                                         true
                                                     ? 'Aktif'
@@ -286,9 +213,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                _isLoading
+                                                provider.isLoading
                                                     ? '...'
-                                                    : '${_currentIntensitasCahaya?.intensitas_cahaya ?? '--'} Cd',
+                                                    : '${provider.currentIntensitasCahaya?.intensitas_cahaya ?? '--'} Cd',
                                                 style: const TextStyle(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.bold,
@@ -319,7 +246,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 ),
                                               ),
                                               Text(
-                                                _currentPenutup?.penutup_ON ==
+                                                provider
+                                                            .currentPenutup
+                                                            ?.penutup_ON ==
                                                         true
                                                     ? 'Aktif'
                                                     : 'Nonaktif',
@@ -403,7 +332,43 @@ class _HomeScreenState extends State<HomeScreen> {
                           IconButton(
                             icon: const Icon(Icons.chevron_right, size: 30),
                             onPressed: () {
-                              PopupSuhu(context);
+                              String description;
+                              Color statusColor;
+
+                              if (provider.currentSuhu == null ||
+                                  provider.batasSuhu == null) {
+                                description = 'Status Tidak Tersedia';
+                                statusColor = Colors.grey;
+                              } else {
+                                final currentTemp =
+                                    provider.currentSuhu!.suhu ?? 0;
+                                final minTemp =
+                                    provider.batasSuhu!.suhu_min ?? 0;
+                                final maxTemp =
+                                    provider.batasSuhu!.suhu_max ?? 0;
+
+                                if (currentTemp > maxTemp) {
+                                  description = 'Suhu diatas batas optimal';
+                                  statusColor = Colors.red;
+                                } else if (currentTemp < minTemp) {
+                                  description = 'Suhu dibawah batas optimal';
+                                  statusColor = Colors.red;
+                                } else {
+                                  description = 'Suhu Optimal';
+                                  statusColor = Colors.green;
+                                }
+                              }
+
+                              PopUp(
+                                context: context,
+                                title: 'Data Suhu Ruangan',
+                                value:
+                                    provider.currentSuhu?.suhu?.toString() ??
+                                    '--',
+                                unit: '°C',
+                                description: description,
+                                descriptionColor: statusColor,
+                              );
                             },
                           ),
                         ],
@@ -450,7 +415,51 @@ class _HomeScreenState extends State<HomeScreen> {
                           IconButton(
                             icon: const Icon(Icons.chevron_right, size: 30),
                             onPressed: () {
-                              PopUpCahaya(context);
+                              String description;
+                              Color statusColor;
+
+                              if (provider.currentIntensitasCahaya == null ||
+                                  provider.batasCahaya == null) {
+                                description = 'Status Tidak Tersedia';
+                                statusColor = Colors.grey;
+                              } else {
+                                final currentIntensity =
+                                    provider
+                                        .currentIntensitasCahaya!
+                                        .intensitas_cahaya ??
+                                    0;
+                                final minIntensity =
+                                    provider.batasCahaya!.cahaya_min ?? 0;
+                                final maxIntensity =
+                                    provider.batasCahaya!.cahaya_max ?? 0;
+
+                                if (currentIntensity > maxIntensity) {
+                                  description =
+                                      'Intensitas cahaya diatas batas optimal';
+                                  statusColor = Colors.red;
+                                } else if (currentIntensity < minIntensity) {
+                                  description =
+                                      'Intensitas cahaya dibawah batas optimal';
+                                  statusColor = Colors.red;
+                                } else {
+                                  description = 'Intensitas Cahaya Optimal';
+                                  statusColor = Colors.green;
+                                }
+                              }
+
+                              PopUp(
+                                context: context,
+                                title: 'Data Intensitas Cahaya',
+                                value:
+                                    provider
+                                        .currentIntensitasCahaya
+                                        ?.intensitas_cahaya
+                                        ?.toString() ??
+                                    '--',
+                                unit: 'Cd',
+                                description: description,
+                                descriptionColor: statusColor,
+                              );
                             },
                           ),
                         ],
@@ -512,35 +521,58 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             Switch(
-                              value: coolerStatus,
+                              value:
+                                  provider.currentPendingin?.pendingin_ON ==
+                                  true,
                               onChanged: (value) {
-                                _updatePendinginStatus(value);
                                 showDialog(
                                   context: context,
                                   builder:
                                       (context) => ConfirmationPopUp(
                                         title:
-                                            coolerStatus
-                                                ? 'Nonaktifkan Pendingin?'
-                                                : 'Aktifkan Pendingin?',
+                                            value
+                                                ? 'Aktifkan Pendingin?'
+                                                : 'Nonaktifkan Pendingin?',
                                         message:
-                                            coolerStatus
-                                                ? 'Apakah Anda yakin ingin menonaktifkan pendingin ruangan?'
-                                                : 'Apakah Anda yakin ingin mengaktifkan pendingin ruangan?',
+                                            value
+                                                ? 'Apakah Anda yakin ingin mengaktifkan pendingin ruangan?'
+                                                : 'Apakah Anda yakin ingin menonaktifkan pendingin ruangan?',
                                         onConfirm: () {
-                                          showDialog(
-                                            context: context,
-                                            builder:
-                                                (context) => SuccessDialog(
-                                                  message:
-                                                      coolerStatus
-                                                          ? 'Pendingin berhasil diaktifkan!'
-                                                          : 'Pendingin berhasil dinonaktifkan!',
-                                                  onConfirm: () {
-                                                    Navigator.pop(context);
-                                                  },
-                                                ),
-                                          );
+                                          provider
+                                              .updatePendinginStatus(value)
+                                              .then((_) {
+                                                NotificationService().showNotification(
+                                                  title:
+                                                      value
+                                                          ? 'Pendingin ruangan mulai diaktifkan'
+                                                          : 'Pendingin ruangan dinonaktifkan',
+                                                  body:
+                                                      value
+                                                          ? 'Pendingin ruangan berhasil diaktifkan!'
+                                                          : 'Pendingin ruangan berhasil dinonaktifkan!',
+                                                );
+                                                showDialog(
+                                                  context: context,
+                                                  builder:
+                                                      (
+                                                        context,
+                                                      ) => SuccessDialog(
+                                                        message:
+                                                            value
+                                                                ? 'Pendingin ruangan berhasil diaktifkan!'
+                                                                : 'Pendingin ruangan berhasil dinonaktifkan!',
+                                                        onConfirm: () {
+                                                          Navigator.pop(
+                                                            context,
+                                                          );
+                                                        },
+                                                      ),
+                                                );
+                                              })
+                                              .catchError((err) {
+                                                handleError(err);
+                                                Navigator.pop(context);
+                                              });
                                         },
                                       ),
                                 );
@@ -597,35 +629,57 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             Switch(
-                              value: coverStatus,
+                              value:
+                                  provider.currentPenutup?.penutup_ON == true,
                               onChanged: (value) {
-                                _updatePenutupStatus(value);
                                 showDialog(
                                   context: context,
                                   builder:
                                       (context) => ConfirmationPopUp(
                                         title:
-                                            coverStatus
-                                                ? 'Nonaktifkan Penutup?'
-                                                : 'Aktifkan Penutup?',
+                                            value
+                                                ? 'Aktifkan Penutup?'
+                                                : 'Nonaktifkan Penutup?',
                                         message:
-                                            coverStatus
-                                                ? 'Apakah Anda yakin ingin menonaktifkan penutup ruangan?'
-                                                : 'Apakah Anda yakin ingin mengaktifkan penutup ruangan?',
+                                            value
+                                                ? 'Apakah Anda yakin ingin mengaktifkan penutup ruangan?'
+                                                : 'Apakah Anda yakin ingin menonaktifkan penutup ruangan?',
                                         onConfirm: () {
-                                          showDialog(
-                                            context: context,
-                                            builder:
-                                                (context) => SuccessDialog(
-                                                  message:
-                                                      coverStatus
-                                                          ? 'Penutup berhasil dinonaktifkan!'
-                                                          : 'Penutup berhasil diaktifkan!',
-                                                  onConfirm: () {
-                                                    Navigator.pop(context);
-                                                  },
-                                                ),
-                                          );
+                                          provider
+                                              .updatePenutupStatus(value)
+                                              .then((_) {
+                                                NotificationService().showNotification(
+                                                  title:
+                                                      value
+                                                          ? 'Penutup ruangan mulai diaktifkan'
+                                                          : 'Penutup ruangan dinonaktifkan',
+                                                  body:
+                                                      value
+                                                          ? 'Penutup ruangan berhasil diaktifkan!'
+                                                          : 'Penutup ruangan berhasil dinonaktifkan!',
+                                                );
+                                                showDialog(
+                                                  context: context,
+                                                  builder:
+                                                      (
+                                                        context,
+                                                      ) => SuccessDialog(
+                                                        message:
+                                                            value
+                                                                ? 'Penutup berhasil diaktifkan!'
+                                                                : 'Penutup berhasil dinonaktifkan!',
+                                                        onConfirm: () {
+                                                          Navigator.pop(
+                                                            context,
+                                                          ); // tutup success dialog
+                                                        },
+                                                      ),
+                                                );
+                                              })
+                                              .catchError((err) {
+                                                handleError(err);
+                                                Navigator.pop(context);
+                                              });
                                         },
                                       ),
                                 );
@@ -633,6 +687,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               activeColor: Colors.white,
                               activeTrackColor: const Color(0xFF4CAF50),
                             ),
+
                             const SizedBox(width: 10),
                           ],
                         ),
@@ -654,7 +709,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void PopupSuhu(BuildContext context) {
+  void PopUp({
+    required BuildContext context,
+    required String title,
+    required String value,
+    required String unit,
+    required String description,
+    Color descriptionColor = Colors.black,
+  }) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -679,9 +741,12 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Data Suhu Ruangan',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 Row(
@@ -689,109 +754,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _currentSuhu?.suhu?.toString() ?? '--',
+                      value,
                       style: const TextStyle(
                         fontSize: 80,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    const SizedBox(width: 4),
                     Text(
-                      '°',
+                      unit,
                       style: TextStyle(
-                        fontSize: 50,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      'C',
-                      style: TextStyle(
-                        fontSize: 80,
+                        fontSize: unit == 'C' ? 80 : 30,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
-                const Text('Suhu Optimal', style: TextStyle(fontSize: 18)),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4CAF50),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 30,
-                      vertical: 12,
-                    ),
-                  ),
-                  child: const Text('Tutup', style: TextStyle(fontSize: 16)),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void PopUpCahaya(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.5),
-                  spreadRadius: 5,
-                  blurRadius: 7,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Data Intensitas Cahaya',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _currentIntensitasCahaya?.intensitas_cahaya?.toString() ??
-                          '--',
-                      style: TextStyle(
-                        fontSize: 80,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      'Cd',
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                const Text(
-                  'Intensitas Cahaya Optimal',
-                  style: TextStyle(fontSize: 18),
+                Text(
+                  description,
+                  style: TextStyle(fontSize: 18, color: descriptionColor),
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(

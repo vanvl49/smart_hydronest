@@ -3,6 +3,7 @@ import 'home_screen.dart';
 import 'lupa_password.dart';
 import 'package:smart_hydronest/services/users_service.dart';
 import 'package:smart_hydronest/widgets/popUp.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final UsersService _usersService = UsersService();
   bool _isLoading = false;
 
-  Future<void> _handleLogin() async {
+  Future<void> _Login() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -32,12 +33,11 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (user != null && user.password == _passwordController.text) {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder:
-                (context) => HomeScreen(username: _usernameController.text),
-          ),
+          MaterialPageRoute(builder: (context) => HomeScreen()),
         );
       } else {
         showDialog(
@@ -141,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _handleLogin,
+                    onPressed: _isLoading ? null : _Login,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF4CAF50),
                       shape: RoundedRectangleBorder(

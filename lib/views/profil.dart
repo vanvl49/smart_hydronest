@@ -37,6 +37,13 @@ class _ProfilState extends State<Profil> {
         _isLoading = false;
       });
       print('Error loading user data: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error fetching user data: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
 
@@ -72,9 +79,7 @@ class _ProfilState extends State<Profil> {
                                 child: Container(
                                   width: 120,
                                   height: 120,
-                                  padding: const EdgeInsets.all(
-                                    4,
-                                  ), 
+                                  padding: const EdgeInsets.all(4),
                                   decoration: const BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: Colors.white,
@@ -230,7 +235,7 @@ class _ProfilState extends State<Profil> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => HomeScreen(username: _user?.username),
+              builder: (context) => HomeScreen(),
             ),
           );
         },

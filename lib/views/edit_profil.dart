@@ -6,6 +6,7 @@ import 'package:smart_hydronest/widgets/appbar.dart';
 import 'package:smart_hydronest/widgets/popUp.dart';
 import 'package:smart_hydronest/services/users_service.dart';
 import 'package:smart_hydronest/models/users_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class EditProfil extends StatefulWidget {
   const EditProfil({super.key});
@@ -56,6 +57,13 @@ class _EditProfilState extends State<EditProfil> {
       setState(() {
         _isLoading = false;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error fetching user data: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
 
@@ -293,7 +301,7 @@ class _EditProfilState extends State<EditProfil> {
                                               ),
                                             )
                                             : const Text(
-                                              'Ubah Data Akun',
+                                              'Simpan',
                                               style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 16,
@@ -314,7 +322,10 @@ class _EditProfilState extends State<EditProfil> {
                                               title: 'Keluar dari sistem?',
                                               message:
                                                   'Apakah Anda yakin ingin keluar dari sistem?',
-                                              onConfirm: () {
+                                              onConfirm: () async {
+                                                SharedPreferences prefs =
+                                                    await SharedPreferences.getInstance();
+                                                await prefs.clear();
                                                 Navigator.of(context).pop();
                                                 Navigator.pushReplacement(
                                                   context,
@@ -361,9 +372,7 @@ class _EditProfilState extends State<EditProfil> {
         onHomeTap: () {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
-              builder: (context) => HomeScreen(username: _user?.username),
-            ),
+            MaterialPageRoute(builder: (context) => HomeScreen()),
           );
         },
       ),
