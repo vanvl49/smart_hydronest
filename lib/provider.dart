@@ -14,6 +14,7 @@ import 'package:smart_hydronest/services/batasSuhu_service.dart';
 import 'package:smart_hydronest/services/batasIntensitasCahaya_service.dart';
 import 'package:smart_hydronest/services/users_service.dart';
 import 'package:smart_hydronest/services/connectivity_service.dart';
+import 'package:smart_hydronest/services/mqtt_service.dart';
 
 class HydronestProvider with ChangeNotifier {
   final ConnectivityService _connectivityService = ConnectivityService();
@@ -24,6 +25,7 @@ class HydronestProvider with ChangeNotifier {
   final _batasSuhuService = BatasSuhuService();
   final _batasCahayaService = BatasIntensitasCahayaService();
   final _usersService = UsersService();
+  final _mqttService = MqttService();
 
   SuhuModel? _currentSuhu;
   IntensitasCahayaModel? _currentIntensitasCahaya;
@@ -92,6 +94,7 @@ class HydronestProvider with ChangeNotifier {
       if (_currentPendingin != null) {
         _currentPendingin!.pendingin_ON = value;
         await _pendinginService.updatePendingin(_currentPendingin!);
+        _mqttService.kontrolPendingin(value ? 'on' : 'off');
         notifyListeners();
       }
     } catch (e) {
@@ -106,6 +109,7 @@ class HydronestProvider with ChangeNotifier {
       if (_currentPenutup != null) {
         _currentPenutup!.penutup_ON = value;
         await _penutupService.updatePenutup(_currentPenutup!);
+        _mqttService.kontrolPenutup(value ? 'tutup' : 'buka');
         notifyListeners();
       }
     } catch (e) {

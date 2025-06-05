@@ -8,6 +8,7 @@ import 'package:smart_hydronest/models/batasSuhu_model.dart';
 import 'package:smart_hydronest/models/batasIntensitasCahaya_model.dart';
 import 'package:smart_hydronest/services/batasSuhu_service.dart';
 import 'package:smart_hydronest/services/batasIntensitasCahaya_service.dart';
+import 'package:smart_hydronest/services/mqtt_service.dart';
 
 class Pengaturan extends StatefulWidget {
   const Pengaturan({super.key});
@@ -22,6 +23,7 @@ class _PengaturanState extends State<Pengaturan> {
       BatasIntensitasCahayaService();
   BatasSuhuModel? batasSuhu = BatasSuhuModel();
   BatasIntensitasCahayaModel? batasCahaya = BatasIntensitasCahayaModel();
+  final _mqttService = MqttService();
 
   void initState() {
     super.initState();
@@ -56,6 +58,7 @@ class _PengaturanState extends State<Pengaturan> {
         updated_at: Timestamp.now(),
       );
       await _batasSuhuService.updateBatasSuhu(batassuhu);
+      _mqttService.ubahBatasSuhu();
       setState(() {
         fetchBatas();
       });
@@ -82,6 +85,7 @@ class _PengaturanState extends State<Pengaturan> {
         updated_at: Timestamp.now(),
       );
       await _batasIntensitasCahayaService.updateBatasCahaya(batascahaya);
+      _mqttService.ubahBatasCahaya();
       setState(() {
         fetchBatas();
       });
@@ -590,7 +594,7 @@ class _PengaturanState extends State<Pengaturan> {
                       if (double.tryParse(value) == null) {
                         return 'Data Invalid';
                       }
-                      if (double.parse(value) > 1000 ||
+                      if (double.parse(value) > 10000 ||
                           double.parse(value) < 0) {
                         return 'Data Invalid';
                       }
@@ -622,15 +626,15 @@ class _PengaturanState extends State<Pengaturan> {
                       if (double.tryParse(value) == null) {
                         return 'Data Invalid';
                       }
-                      if (double.parse(value) > 1000 ||
+                      if (double.parse(value) > 10000 ||
                           double.parse(value) < 0) {
                         return 'Data Invalid';
                       }
-                      if (_minController.text.isNotEmpty &&
-                          double.parse(value) <=
-                              double.parse(_minController.text)) {
-                        return 'Batas maksimal harus lebih besar dari minimal';
-                      }
+                      // if (_minController.text.isNotEmpty &&
+                      //     double.parse(value) <=
+                      //         double.parse(_minController.text)) {
+                      //   return 'Batas maksimal harus lebih besar dari minimal';
+                      // }
                       return null;
                     },
                   ),

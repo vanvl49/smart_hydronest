@@ -11,12 +11,13 @@ import 'package:smart_hydronest/services/notifikasi_service.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:smart_hydronest/services/mqtt_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await NotificationService().init();
   await requestNotificationPermission();
 
@@ -28,13 +29,13 @@ void main() async {
   );
 }
 
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print('🔙 Handling background message: ${message.messageId}');
-  await NotificationService().showNotification(
-    title: message.notification?.title ?? 'Notification',
-    body: message.notification?.body ?? '',
-  );
-}
+// Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+//   print('🔙 Handling background message: ${message.messageId}');
+//   await NotificationService().showNotification(
+//     title: message.notification?.title ?? 'Notification',
+//     body: message.notification?.body ?? '',
+//   );
+// }
 
 Future<void> requestNotificationPermission() async {
   if (Platform.isAndroid) {
@@ -66,18 +67,23 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   final ConnectivityService _connectivityService = ConnectivityService();
+  final mqttService = MqttService();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _connectivityService.initialize(context);
+      mqttService.connect();
+      mqttService.ubahBatasSuhu();
+      mqttService.ubahBatasCahaya();
     });
   }
 
   @override
   void dispose() {
     _connectivityService.dispose();
+    mqttService.disconnect();
     super.dispose();
   }
 
